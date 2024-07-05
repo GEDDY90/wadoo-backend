@@ -7,14 +7,17 @@ import { LoginInput } from "./dtos/login.tdo";
 import { JwtService } from "src/jwt/jwt.service";
 import { EditProfileIntput } from "./dtos/edit-profile.dto";
 import { Verification } from "./entities/verification.entity";
+import { VerifyEmailOutput } from "./dtos/verify-email.dto";
+import { UserProfileOuput } from "./dtos/user-profile.dto";
 
 
 @Injectable()
 export class UsersService {
     constructor(
-        @InjectRepository(User) private readonly users: Repository<User>,
-        @InjectRepository(Verification) private readonly verifications: Repository<Verification>,
-
+        @InjectRepository(User) 
+        private readonly users: Repository<User>,
+        @InjectRepository(Verification) 
+        private readonly verifications: Repository<Verification>,
         private readonly jwtService : JwtService,
     ) {}
 
@@ -52,7 +55,6 @@ export class UsersService {
                 };
             }
             //fournir son cookies
-            console.log(user);
             const token = this.jwtService.sign(user.id);
             return {
                 ok: true,
@@ -85,14 +87,22 @@ export class UsersService {
 
     }
 
-    async verifyEmail(code: string): Promise<boolean> {
-       const verification = await this.verifications.findOne({ where: {code}, relations: ["user"]});
-       if(verification){
-        verification.user.verified = true;
-        console.log(verification.user)
-        this.users.save(verification.user);
-       }
-       return false;
+    async verifyEmail(code: string): Promise<VerifyEmailOutput> {
+        try{
+            const verification = await this.verifications.findOne(
+                { where: {code},
+                 relations: ["user"]});
+            if(verification){
+            verification.user.verified = true;
+            await this.users.save(verification.user);
+            await this.verifications.delete(verification.id);
+            return {ok: true};
+            }
+            return {ok: false, error: "Vérification non trouvé"}
+
+        }catch(error){
+            return {ok: false, error};
+        }
     }
     
 } 

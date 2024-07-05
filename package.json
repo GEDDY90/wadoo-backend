@@ -36,6 +36,7 @@
     "class-validator": "^0.14.1",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
+    "got": "^14.4.1",
     "graphql": "^16.8.2",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
