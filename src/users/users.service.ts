@@ -5,10 +5,10 @@ import { Repository } from "typeorm";
 import { CreateAccountInput } from "./dtos/create-account.dtos";
 import { LoginInput } from "./dtos/login.tdo";
 import { JwtService } from "src/jwt/jwt.service";
-import { EditProfileIntput } from "./dtos/edit-profile.dto";
+import { EditProfileIntput, EditProfileOutput } from "./dtos/edit-profile.dto";
 import { Verification } from "./entities/verification.entity";
 import { VerifyEmailOutput } from "./dtos/verify-email.dto";
-import { UserProfileOuput } from "./dtos/user-profile.dto";
+import { MailService } from "src/mail/mail.service";
 
 
 @Injectable()
@@ -19,6 +19,7 @@ export class UsersService {
         @InjectRepository(Verification) 
         private readonly verifications: Repository<Verification>,
         private readonly jwtService : JwtService,
+        private readonly mailService: MailService,
     ) {}
 
     async createAccount({email, password, role}: CreateAccountInput): Promise<{ ok: boolean, error?: string}> {
@@ -28,9 +29,11 @@ export class UsersService {
                 return { ok: false, error: "Il y a déjà un utilisateur pour cette adresse e-mail"};
             }
             const user = await this.users.save(this.users.create({email, password, role}));
-            await this.verifications.save(this.verifications.create({
+            const verification = await this.verifications.save(this.verifications.create({
                 user
-            }))
+            })
+        );
+        this.mailService.sendVerificationEmail(user.email, verification.code);
             return {ok : true};
         }   catch(e){
             return {ok:false, error: "Le compte n'est pas créer"};
@@ -72,18 +75,20 @@ export class UsersService {
         return this.users.findOne({ where : {id} })
     }
 
-    async editProfile(id: number, {email, password} : EditProfileIntput): Promise<User> {
+    async editProfile(id: number, {email, password} : EditProfileIntput): Promise<EditProfileOutput> {
         const user = await this.users.findOne({ where : {id} });
         if (email){
             user.email = email;
             user.verified = false;
-            await this.verifications.save(this.verifications.create({user}));
+
         }
         if (password) {
             user.password = password;
         }
-        console.log(EditProfileIntput)
-        return this.users.save(user);
+        await this.users.save(user);
+        return {
+            ok:true,
+        }
 
     }
 

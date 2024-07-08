@@ -40,7 +40,7 @@ export class UsersResolver {
     @UseGuards(AuthGuard)
     @Mutation(returns => EditProfileOutput)
     async editProfile(@AuthUser() authUser: User, @Args('input')editProfileInput:EditProfileIntput
-    ): Promise <User> {
+    ): Promise <EditProfileOutput> {
         return this.usersService.editProfile(authUser.id, editProfileInput);
     }
 
