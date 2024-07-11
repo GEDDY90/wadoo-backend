@@ -28,10 +28,11 @@ export class UsersService {
             if (exists) { 
                 return { ok: false, error: "Il y a déjà un utilisateur pour cette adresse e-mail"};
             }
-            const user = await this.users.save(this.users.create({email, password, role}));
+            const user = await this.users.save(this.users.create({email, password, role}),);
+
             const verification = await this.verifications.save(this.verifications.create({
-                user
-            })
+                user,
+            }),
         );
         this.mailService.sendVerificationEmail(user.email, verification.code);
             return {ok : true};
