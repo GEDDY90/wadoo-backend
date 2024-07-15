@@ -1,17 +1,16 @@
-import * as request from 'supertest';
 import { Test } from '@nestjs/testing';
-import { AppModule } from 'src/AppModule';
 import { INestApplication } from '@nestjs/common';
+import { AppModule } from '../src/app.module';
 
-describe('AppController (e2e)', () => {
+describe('UserModule (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleFixture = await Test.createTestingModule({
+    const module = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = module.createNestApplication();
     await app.init();
   });
 
@@ -19,10 +18,11 @@ describe('AppController (e2e)', () => {
     await app.close();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
-  });
+  it.todo('me');
+  it.todo('userProfile');
+  it.todo('createAccount');
+  it.todo('login');
+  it.todo('editProfile');
+  it.todo('verifyEmail');
+
 });

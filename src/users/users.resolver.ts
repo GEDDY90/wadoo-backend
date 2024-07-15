@@ -6,7 +6,7 @@ import { LoginInput, LoginOutput } from "./dtos/login.tdo";
 import { UseGuards } from "@nestjs/common";
 import { AuthGuard } from "src/auth/auth.guard";
 import { AuthUser } from "src/auth/auth-user.decorator";
-import { UserProfileInput, UserProfileOuput } from "./dtos/user-profile.dto";
+import { UserProfileInput, UserProfileOutput } from "./dtos/user-profile.dto";
 import { EditProfileIntput, EditProfileOutput } from "./dtos/edit-profile.dto";
 import { VerifyEmailInput, VerifyEmailOutput } from "./dtos/verify-email.dto";
 
@@ -32,10 +32,11 @@ export class UsersResolver {
     me(@AuthUser() authUser: User ){
         return authUser;
     }
-    @Query(returns=> UserProfileOuput)
+    @Query(returns=> UserProfileOutput)
     @UseGuards(AuthGuard)
-    async userProfile(@Args() userProfileInput : UserProfileInput): Promise <User>{
+    async userProfile(@Args() userProfileInput : UserProfileInput): Promise <UserProfileOutput>{
         return this.usersService.findById(userProfileInput.userId); 
+
     }
     @UseGuards(AuthGuard)
     @Mutation(returns => EditProfileOutput)

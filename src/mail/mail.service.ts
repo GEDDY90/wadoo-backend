@@ -10,10 +10,10 @@ export class MailService {
         @Inject(CONFIG_OPTIONS) private readonly options: MailModuleOptions
     ) {}
 
-    private async sendMail(
+    async sendMail(
         subject: string,
         template: string, 
-        emailVars: EmailVar[]) {
+        emailVars: EmailVar[]): Promise<boolean> {
         const form = new FormData();
         form.append("from", `Le CEO de Wadoo <mailgun@${this.options.domain}>`);
         form.append("to", `geddydossou@gmail.com`);
@@ -28,9 +28,9 @@ export class MailService {
                     ...form.getHeaders(),
                 },
             });
-
+            return true;
         } catch (error) {
-            console.error('Error sending email:', error.response ? error.response.data : error.message);
+            return false;
         }
     }
 
