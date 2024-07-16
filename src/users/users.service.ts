@@ -4,11 +4,11 @@ import { User } from "./entities/user.entity";
 import { Repository } from "typeorm";
 import { CreateAccountInput, CreateAccountOutput } from "./dtos/create-account.dtos";
 import { LoginInput, LoginOutput } from "./dtos/login.tdo";
-import { JwtService } from "src/jwt/jwt.service";
+import { JwtService } from "../jwt/jwt.service";
 import { EditProfileIntput, EditProfileOutput } from "./dtos/edit-profile.dto";
 import { Verification } from "./entities/verification.entity";
 import { VerifyEmailOutput } from "./dtos/verify-email.dto";
-import { MailService } from "src/mail/mail.service";
+import { MailService } from "../mail/mail.service";
 import { UserProfileOutput } from "./dtos/user-profile.dto";
 
 

@@ -16,7 +16,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json --detectOpenHandles"
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",
@@ -73,13 +73,12 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.5.3"
   },
   "jest": {
-    "moduleNameMapper":{
-      "^src/(.*)$":"<rootDir>/$1"
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
     },
-
     "moduleFileExtensions": [
       "js",
       "json",
