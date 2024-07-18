@@ -106,8 +106,6 @@ export class UsersService {
             };
 
         } catch(error) {
-            console.error('Error updating profile:', error);
-
             return {ok: false, error: "le profile n'a pas été modifié"}
         }
     }
