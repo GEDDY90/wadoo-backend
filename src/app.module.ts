@@ -57,6 +57,7 @@ import { RestaurantsModule } from './restaurants/restaurants.module';
     JwtModule.forRoot({
       privateKey: process.env.PRIVATE_KEY,
     }),
+    AuthModule,
     UsersModule,
     RestaurantsModule,
     CommonModule,
