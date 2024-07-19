@@ -19,6 +19,11 @@ export class Restaurant extends CoreEntity{
     @Field(type=>String)
     @Column()
     @IsString()
+    description: string;
+
+    @Field(type=>String)
+    @Column()
+    @IsString()
     coverImg: string;
 
     @Field(type=>String, {defaultValue: "Bénin"})

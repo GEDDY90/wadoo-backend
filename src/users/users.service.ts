@@ -23,36 +23,46 @@ export class UsersService {
         private readonly mailService: MailService,
     ) {}
 
-    async createAccount({email, password, role}: CreateAccountInput): Promise<CreateAccountOutput> {
+    async createAccount({ email, password, role }: CreateAccountInput): Promise<CreateAccountOutput> {
         try {
-            const exists = await this.users.findOne({ where: { email} });
-            if (exists) { 
-                return { ok: false, error: "Il y a déjà un utilisateur pour cette adresse e-mail"};
+            // Vérifie si l'utilisateur existe déjà
+            const exists = await this.users.findOne({ where: { email } });
+            if (exists) {
+                return { ok: false, error: "Il y a déjà un utilisateur pour cette adresse e-mail" };
             }
-            const user = await this.users.save(this.users.create({email, password, role}),);
-
+    
+            // Crée un nouvel utilisateur
+            const user = await this.users.save(this.users.create({ email, password, role }));
+    
+            // Crée une vérification pour l'utilisateur
             const verification = await this.verifications.save(this.verifications.create({
                 user,
-            }),
-        );
-        this.mailService.sendVerificationEmail(user.email, verification.code);
-            return {ok : true};
-        }   catch(e){
-            return {ok:false, error: "Le compte n'est pas créer"};
+            }));
+    
+            // Envoie un e-mail de vérification
+            this.mailService.sendVerificationEmail(user.email, verification.code);
+    
+            return { ok: true };
+        } catch (error) {
+            // Gère les erreurs potentielles
+            return { ok: false, error: "Le compte n'a pas été créé" };
         }
     }
-
-    async login({email, password}: LoginInput) : Promise<LoginOutput>{
-        try{
-            //trouver email      
-            const user = await this.users.findOne({where: {email}, select: ["id", "password"]});
+    
+    async login({ email, password }: LoginInput): Promise<LoginOutput> {
+        try {
+            // Recherche l'utilisateur par e-mail et sélectionne uniquement id et password
+            const user = await this.users.findOne({ where: { email }, select: ["id", "password"] });
+    
+            // Vérifie si l'utilisateur existe
             if (!user) {
                 return {
                     ok: false,
-                    error: (`Utilisateur non trouvé pour cette adresse email ${email}`),
+                    error: `Utilisateur non trouvé pour cette adresse email ${email}`,
                 };
             }
-            //vérifier le pass
+    
+            // Vérifie si le mot de passe est correct
             const passwordCorrect = await user.checkPassword(password);
             if (!passwordCorrect) {
                 return {
@@ -60,73 +70,97 @@ export class UsersService {
                     error: "Mot de passe incorrect",
                 };
             }
-            //fournir son cookies
+    
+            // Si tout est bon, génère un token JWT
             const token = this.jwtService.sign(user.id);
             return {
                 ok: true,
                 token,
-            }
-            }catch(error){
-                return {
-                    ok: false,
-                    error: "Vous ne pouvez pas vous connecter",
-                }
-            }
+            };
+        } catch (error) {
+            // Gère les erreurs potentielles
+            return {
+                ok: false,
+                error: "Vous ne pouvez pas vous connecter",
+            };
+        }
     }
-
-    async findById(id:number): Promise<UserProfileOutput> {
+    
+    async findById(id: number): Promise<UserProfileOutput> {
         try {
-            const user = await this.users.findOneOrFail({ where : {id} });
+            // Recherche un utilisateur par ID
+            const user = await this.users.findOneOrFail({ where: { id } });
             return {
                 ok: true,
                 user,
-            }
-        }catch (error){
-            return {ok: false, error: "Utilisateur non trouvé"}
+            };
+        } catch (error) {
+            // Gère les erreurs potentielles si l'utilisateur n'est pas trouvé
+            return { ok: false, error: "Utilisateur non trouvé" };
         }
     }
-
-    async editProfile(id: number, {email, password} : EditProfileIntput): Promise<EditProfileOutput> {
+    
+    async editProfile(id: number, { email, password }: EditProfileIntput): Promise<EditProfileOutput> {
         try {
-            const user = await this.users.findOne({ where : {id} });
-            if (email){
+            // Recherche l'utilisateur à modifier
+            const user = await this.users.findOne({ where: { id } });
+            if (!user) {
+                return { ok: false, error: "Utilisateur non trouvé" };
+            }
+    
+            // Met à jour l'e-mail si fourni, et marque comme non vérifié
+            if (email) {
                 user.email = email;
                 user.verified = false;
-                this.verifications.delete({user:{id:user.id}});
-                }
-                const verification = await this.verifications.save(this.verifications.create({user}),     
-            );
-                this.mailService.sendVerificationEmail(user.email, verification.code);
+    
+                // Supprime les anciennes vérifications liées à l'utilisateur
+                await this.verifications.delete({ user: { id: user.id } });
+            }
+    
+            // Enregistre la nouvelle vérification
+            const verification = await this.verifications.save(this.verifications.create({ user }));
+            this.mailService.sendVerificationEmail(user.email, verification.code);
+    
+            // Met à jour le mot de passe si fourni
             if (password) {
                 user.password = password;
             }
+    
+            // Enregistre les modifications de l'utilisateur
             await this.users.save(user);
+    
             return {
-                ok:true,
+                ok: true,
             };
-
-        } catch(error) {
-            return {ok: false, error: "le profile n'a pas été modifié"}
+        } catch (error) {
+            // Gère les erreurs potentielles
+            return { ok: false, error: "Le profil n'a pas été modifié" };
         }
     }
-
+    
     async verifyEmail(code: string): Promise<VerifyEmailOutput> {
-        try{
-            const verification = await this.verifications.findOne(
-                { where: {code},
-                 relations: ["user"]});
-            if(verification){
-            verification.user.verified = true;
-            await this.users.save(verification.user);
-            await this.verifications.delete(verification.id);
-            return {ok: true};
+        try {
+            // Recherche la vérification par le code, avec relation à l'utilisateur
+            const verification = await this.verifications.findOne({ where: { code }, relations: ["user"] });
+    
+            if (verification) {
+                // Marque l'utilisateur comme vérifié
+                verification.user.verified = true;
+                await this.users.save(verification.user);
+    
+                // Supprime la vérification utilisée
+                await this.verifications.delete(verification.id);
+    
+                return { ok: true };
             }
-            return {ok: false, error: "Vérification non trouvé"}
-
-        }catch(error){
-            return {ok: false, error: "Le mail n'est pas vérifié"};
+    
+            return { ok: false, error: "Vérification non trouvée" };
+        } catch (error) {
+            // Gère les erreurs potentielles
+            return { ok: false, error: "Le mail n'est pas vérifié" };
         }
     }
+    
     
 } 
 
