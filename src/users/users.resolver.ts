@@ -28,14 +28,16 @@ export class UsersResolver {
     async login(@Args("input") LoginInput: LoginInput):Promise<LoginOutput> {
         return this.usersService.login(LoginInput);
     }
-    @Query(returns => User)
+
     @Role(['Any'])
+    @Query(returns => User)
     @UseGuards(AuthGuard)
     me(@AuthUser() authUser: User ){
         return authUser;
     }
-    @Query(returns=> UserProfileOutput)
+
     @Role(['Any'])
+    @Query(returns=> UserProfileOutput)
     async userProfile(@Args() userProfileInput : UserProfileInput): Promise <UserProfileOutput>{
         return this.usersService.findById(userProfileInput.userId); 
 

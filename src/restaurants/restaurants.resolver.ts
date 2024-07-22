@@ -7,15 +7,15 @@ import { User } from '../users/entities/user.entity';
 import { Role } from '../auth/role.decorator';
 import { EditRestaurantInput, EditRestaurantOutput } from './dtos/edit-restaurant.dto';
 import { DeleteRestaurantOutput } from './dtos/delete-restaurant.dto';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, UseGuards } from '@nestjs/common';
 import { Category } from './entities/category.entity';
 
 @Resolver(() => Restaurant)
 export class RestaurantResolver {
   constructor(private readonly restaurantService: RestaurantService) {}
 
+  @Role(['Owner']) // rôle requis pour cette mutation
   @Mutation(() => CreateRestaurantOutput)
-  @Role(['Owner']) // Exemple de rôle requis pour cette mutation
   async createRestaurant(
     @AuthUser() owner: User,
     @Args('input') createRestaurantInput: CreateRestaurantInput,
@@ -23,8 +23,8 @@ export class RestaurantResolver {
     return this.restaurantService.createRestaurant(owner, createRestaurantInput);
   }
 
+  @Role(['Owner']) // rôle requis pour cette mutation
   @Mutation(() => EditRestaurantOutput)
-  @Role(['Owner']) // Exemple de rôle requis pour cette mutation
   async editRestaurant(
     @AuthUser() owner: User,
     @Args('input') editRestaurantInput: EditRestaurantInput,
@@ -44,8 +44,8 @@ export class RestaurantResolver {
     return this.restaurantService.getRestaurantById(id);
   }
 
+  @Role(['Owner']) // rôle requis pour cette mutation
   @Mutation(() => DeleteRestaurantOutput)
-  @Role(['Owner']) // Exemple de rôle requis pour cette mutation
   async deleteRestaurant(
     @AuthUser() owner: User,
     @Args('id', { type: () => Int }) id: number,
@@ -70,6 +70,4 @@ export class RestaurantResolver {
   async getAllCategories(): Promise<Category[]> {
     return this.restaurantService.getAllCategories();
   }
-
 }
-

@@ -1,50 +1,51 @@
-import { Field, InputType, ObjectType } from "@nestjs/graphql";
-import { IsString, Length} from "class-validator";
+import { Field, ObjectType } from "@nestjs/graphql";
+import { IsString, Length } from "class-validator";
 import { CoreEntity } from "src/common/entities/core.entity";
 import { Column, Entity, ManyToOne, RelationId } from "typeorm";
 import { Category } from "./category.entity";
 import { User } from "src/users/entities/user.entity";
 
-@InputType('RestaurantInputType',{isAbstract:true})
 @ObjectType()
 @Entity()
-export class Restaurant extends CoreEntity{
+export class Restaurant extends CoreEntity {
 
-    @Field(type=>String)
+    @Field(type => String)
     @Column()
     @IsString()
     @Length(5)
     name: string;
 
-    @Field(type=>String)
+    @Field(type => String)
     @Column()
     @IsString()
     description: string;
 
-    @Field(type=>String)
+    @Field(type => String)
     @Column()
     @IsString()
     coverImg: string;
 
-    @Field(type=>String, {defaultValue: "Bénin"})
+    @Field(type => String, { defaultValue: "Bénin" })
     @Column()
     @IsString()
-    adress: string;
+    address: string;
 
-    @Field(type=> Category, {nullable: true})
+    @Field(type => Category, { nullable: true })
     @ManyToOne(
-        type=> Category,
-        category => category.restaurants, {nullable: true, onDelete: 'SET NULL'})
+        type => Category,
+        category => category.restaurants,
+        { nullable: true, onDelete: 'SET NULL' }
+    )
     category: Category;
 
-    @Field(type=> User, {nullable: true})
+    @Field(type => User, { nullable: true })
     @ManyToOne(
-        type=> User,
+        type => User,
         user => user.restaurants,
-        {onDelete: "CASCADE"},
-    ) 
+        { onDelete: "CASCADE" },
+    )
     owner: User;
 
-    @RelationId((restaurant: Restaurant)=> restaurant.owner)
-    ownerId : number
+    @RelationId((restaurant: Restaurant) => restaurant.owner)
+    ownerId: number;
 }

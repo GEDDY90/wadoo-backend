@@ -7,7 +7,7 @@ import { CoreOutput } from "../../common/dtos/output.dto";
 export class CreateRestaurantInput extends PickType(Restaurant, [
     "name",
     "coverImg",
-    "adress",
+    "address",
     "description"
 ]){
     @Field(type=>String)
