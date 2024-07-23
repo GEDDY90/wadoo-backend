@@ -7,15 +7,14 @@ import { User } from '../users/entities/user.entity';
 import { Role } from '../auth/role.decorator';
 import { EditRestaurantInput, EditRestaurantOutput } from './dtos/edit-restaurant.dto';
 import { DeleteRestaurantOutput } from './dtos/delete-restaurant.dto';
-import { NotFoundException, UseGuards } from '@nestjs/common';
 import { Category } from './entities/category.entity';
 
 @Resolver(() => Restaurant)
 export class RestaurantResolver {
   constructor(private readonly restaurantService: RestaurantService) {}
 
-  @Role(['Owner']) // rôle requis pour cette mutation
   @Mutation(() => CreateRestaurantOutput)
+  @Role(['Owner'])
   async createRestaurant(
     @AuthUser() owner: User,
     @Args('input') createRestaurantInput: CreateRestaurantInput,
@@ -23,8 +22,8 @@ export class RestaurantResolver {
     return this.restaurantService.createRestaurant(owner, createRestaurantInput);
   }
 
-  @Role(['Owner']) // rôle requis pour cette mutation
   @Mutation(() => EditRestaurantOutput)
+  @Role(['Owner'])
   async editRestaurant(
     @AuthUser() owner: User,
     @Args('input') editRestaurantInput: EditRestaurantInput,
@@ -32,20 +31,8 @@ export class RestaurantResolver {
     return this.restaurantService.editRestaurant(owner, editRestaurantInput);
   }
 
-  @Query(() => [Restaurant])
-  async restaurants(): Promise<Restaurant[]> {
-    return this.restaurantService.getAllRestaurants();
-  }
-
-  @Query(() => Restaurant)
-  async restaurant(
-    @Args('id', { type: () => Int }) id: number,
-  ): Promise<Restaurant> {
-    return this.restaurantService.getRestaurantById(id);
-  }
-
-  @Role(['Owner']) // rôle requis pour cette mutation
   @Mutation(() => DeleteRestaurantOutput)
+  @Role(['Owner'])
   async deleteRestaurant(
     @AuthUser() owner: User,
     @Args('id', { type: () => Int }) id: number,
@@ -54,16 +41,24 @@ export class RestaurantResolver {
   }
 
   @Query(() => [Restaurant])
+  async getAllRestaurants(): Promise<Restaurant[]> {
+    return this.restaurantService.getAllRestaurants();
+  }
+
+  @Query(() => Restaurant)
+  async getRestaurantById(
+    @Args('id', { type: () => Int }) id: number,
+  ): Promise<Restaurant> {
+    return this.restaurantService.getRestaurantById(id);
+  }
+
+  @Query(() => [Restaurant])
   async getRestaurantsByCategory(
     @Args('categorySlug') categorySlug: string,
-    @Args('page', { type: () => Int, defaultValue: 1 }) page: number,
-    @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
+    @Args('page', { type: () => Int, nullable: true }) page: number = 1,
+    @Args('limit', { type: () => Int, nullable: true }) limit: number = 10,
   ): Promise<Restaurant[]> {
-    try {
-      return this.restaurantService.getRestaurantsByCategory(categorySlug, page, limit);
-    } catch (error) {
-      throw new NotFoundException(error.message);
-    }
+    return this.restaurantService.getRestaurantsByCategory(categorySlug, page, limit);
   }
 
   @Query(() => [Category])

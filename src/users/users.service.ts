@@ -31,7 +31,6 @@ export class UsersService {
 
             // Crée un nouvel utilisateur avec le mot de passe hashé
             const newUser = this.users.create({ email, password, role });
-            await newUser.hashPassword(); // Hash du mot de passe avant sauvegarde
             const user = await this.users.save(newUser);
 
             // Crée une vérification pour l'utilisateur
@@ -51,7 +50,7 @@ export class UsersService {
     async login({ email, password }: LoginInput): Promise<LoginOutput> {
         try {
             // Recherche l'utilisateur par e-mail avec le mot de passe sélectionné
-            const user = await this.users.findOne({ where: { email } });
+            const user = await this.users.findOne({ where: { email }, select: ["id", "password"] });
             if (!user) {
                 return { ok: false, error: `Utilisateur non trouvé pour cette adresse email ${email}` };
             }
@@ -68,21 +67,6 @@ export class UsersService {
         } catch (error) {
             // Gère les erreurs potentielles
             return { ok: false, error: "Vous ne pouvez pas vous connecter" };
-        }
-    }
-
-    // Méthode pour trouver un utilisateur par ID
-    async findById(id: number): Promise<UserProfileOutput> {
-        try {
-            // Recherche un utilisateur par ID ou lance une exception si non trouvé
-            const user = await this.users.findOneOrFail({where:{id}});
-            return { ok: true, user };
-        } catch (error) {
-            // Gère les erreurs potentielles si l'utilisateur n'est pas trouvé
-            if (error instanceof NotFoundException) {
-                return { ok: false, error: "Utilisateur non trouvé" };
-            }
-            return { ok: false, error: "Une erreur s'est produite" };
         }
     }
 
@@ -121,6 +105,21 @@ export class UsersService {
         } catch (error) {
             // Gère les erreurs potentielles
             return { ok: false, error: "Le profil n'a pas été modifié" };
+        }
+    }
+
+    // Méthode pour trouver un utilisateur par ID
+    async findById(id: number): Promise<UserProfileOutput> {
+        try {
+            // Recherche un utilisateur par ID ou lance une exception si non trouvé
+            const user = await this.users.findOneOrFail({where:{id}});
+            return { ok: true, user };
+        } catch (error) {
+            // Gère les erreurs potentielles si l'utilisateur n'est pas trouvé
+            if (error instanceof NotFoundException) {
+                return { ok: false, error: "Utilisateur non trouvé" };
+            }
+            return { ok: false, error: "Une erreur s'est produite" };
         }
     }
 

@@ -9,7 +9,7 @@ import { AuthUser } from "../auth/auth-user.decorator";
 import { UserProfileInput, UserProfileOutput } from "./dtos/user-profile.dto";
 import { EditProfileIntput, EditProfileOutput } from "./dtos/edit-profile.dto";
 import { VerifyEmailInput, VerifyEmailOutput } from "./dtos/verify-email.dto";
-import { Role } from "src/auth/role.decorator";
+import { Role } from "../auth/role.decorator";
 
 
 @Resolver(of => User)

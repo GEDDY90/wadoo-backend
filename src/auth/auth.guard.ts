@@ -12,7 +12,7 @@ export class AuthGuard implements CanActivate {
     canActivate(context: ExecutionContext) {
         const roles= this.reflector.get<AllowedRoles>(
             'roles',
-             context.getHandler(),
+             context.getHandler()
         );
         if(!roles){
             return true;
