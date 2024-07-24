@@ -14,7 +14,7 @@ export class RestaurantService {
   constructor(
     @InjectRepository(Restaurant)
     private readonly restaurants: Repository<Restaurant>,
-    @InjectRepository(CategoryRepository)
+    @InjectRepository(Category)
     private readonly categories: CategoryRepository,
   ) {
     // Ajoutez des logs pour vérifier l'injection
@@ -36,46 +36,45 @@ export class RestaurantService {
 
       return { ok: true };
     } catch (error) {
-      console.error(error);
       return { ok: false, error: 'Vous ne pouvez pas créer un restaurant' };
     }
   }
 
   async editRestaurant(
-    owner: User,
-    editRestaurantInput: EditRestaurantInput,
-  ): Promise<EditRestaurantOutput> {
-    try {
-      // Trouver le restaurant par son ID
-      const restaurant = await this.restaurants.findOne({ where: { id: editRestaurantInput.restaurantId } });
-      if (!restaurant) {
-        return { ok: false, error: 'Restaurant non trouvé' };
-      }
-  
-      // Vérifier si l'utilisateur est le propriétaire du restaurant
-      if (restaurant.ownerId !== owner.id) {
-        return { ok: false, error: 'Vous n\'êtes pas autorisé à modifier ce restaurant' };
-      }
-  
-      // Si une nouvelle catégorie est spécifiée, obtenir ou créer cette catégorie
-      if (editRestaurantInput.categoryName) {
-        const category = await this.categories.getOrCreate(editRestaurantInput.categoryName);
-        restaurant.category = category;
-      }
-  
-      // Mettre à jour les propriétés du restaurant
-      Object.assign(restaurant, editRestaurantInput);
-      
-      // Sauvegarder les modifications
-      await this.restaurants.save(restaurant);
-  
-      return { ok: true };
-    } catch (error) {
-      console.error('Erreur lors de l\'édition du restaurant:', error);
-      return { ok: false, error: 'Une erreur est survenue lors de l\'édition du restaurant' };
+  owner: User,
+  editRestaurantInput: EditRestaurantInput,
+): Promise<EditRestaurantOutput> {
+  try {
+    // Trouver le restaurant par son ID
+    const restaurant = await this.restaurants.findOne({ where: { id: editRestaurantInput.restaurantId } });
+    if (!restaurant) {
+      return { ok: false, error: 'Restaurant non trouvé' };
     }
+
+    // Vérifier si l'utilisateur est le propriétaire du restaurant
+    if (restaurant.ownerId !== owner.id) {
+      return { ok: false, error: 'Vous n\'êtes pas autorisé à modifier ce restaurant' };
+    }
+
+    // Si une nouvelle catégorie est spécifiée, obtenir ou créer cette catégorie
+    if (editRestaurantInput.categoryName) {
+      const category = await this.categories.getOrCreate(editRestaurantInput.categoryName);
+      restaurant.category = category;
+    }
+
+    // Mettre à jour les propriétés du restaurant
+    Object.assign(restaurant, editRestaurantInput);
+    
+    // Sauvegarder les modifications
+    await this.restaurants.save(restaurant);
+
+    return { ok: true };
+  } catch (error) {
+    console.error('Erreur lors de l\'édition du restaurant:', error);
+    return { ok: false, error: 'Une erreur est survenue lors de l\'édition du restaurant' };
   }
-  
+}
+
 
   // Méthode pour récupérer tous les restaurants
   async getAllRestaurants(): Promise<Restaurant[]> {
@@ -107,7 +106,9 @@ export class RestaurantService {
 
       return { ok: true };
     } catch (error) {
-      console.error('Erreur lors de la suppression du restaurant:', error);
+      if (error instanceof NotFoundException || error instanceof UnauthorizedException) {
+        throw error;
+      }
       return { ok: false, error: 'Une erreur est survenue lors de la suppression du restaurant' };
     }
   }
