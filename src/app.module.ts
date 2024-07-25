@@ -16,6 +16,7 @@ import { Restaurant } from './restaurants/entities/restaurant.entity';
 import { Category } from './restaurants/entities/category.entity';
 import { RestaurantsModule } from './restaurants/restaurants.module';
 import { Dish } from './restaurants/entities/dish.entity';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -67,7 +68,8 @@ import { Dish } from './restaurants/entities/dish.entity';
       apiKey:process.env. MAILGUN_API_KEY,
       domain: process.env.MAILGUN_DOMAIN_NAME,
       fromEmail:process.env. MAILGUN_FROM_EMAIL,
-    }),   
+    }),
+    OrdersModule,   
 ],
   controllers: [],
   providers: [],

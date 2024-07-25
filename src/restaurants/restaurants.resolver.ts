@@ -11,7 +11,6 @@ import { Category } from './entities/category.entity';
 import { AllCategoriesOutput } from './dtos/allcategories.dto';
 import { CategoryInput, CategoryOutput } from './dtos/category.dto';
 import { RestaurantsInput, RestaurantsOutput } from './dtos/restaurants.dto';
-import { RestaurantsModule } from './restaurants.module';
 import { RestaurantInput, RestaurantOutput } from './dtos/restaurant.dto';
 import { SearchRestaurantInput, SearchRestaurantOutput } from './dtos/search-restaurant.dto';
 import { Dish } from './entities/dish.entity';
