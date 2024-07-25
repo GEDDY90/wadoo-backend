@@ -1,25 +1,28 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Restaurant } from './entities/restaurant.entity';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ILike, Repository } from 'typeorm';
 import { CreateRestaurantInput, CreateRestaurantOutput } from './dtos/create-restaurant.dto';
 import { User } from '../users/entities/user.entity';
 import { Category } from './entities/category.entity';
 import { EditRestaurantInput, EditRestaurantOutput } from './dtos/edit-restaurant.dto';
-import { DeleteRestaurantOutput } from './dtos/delete-restaurant.dto';
+import { DeleteRestaurantInput, DeleteRestaurantOutput } from './dtos/delete-restaurant.dto';
 import { CategoryRepository } from './repository/category.repository';
+import { AllCategoriesOutput } from './dtos/allcategories.dto';
+import { CategoryInput, CategoryOutput } from './dtos/category.dto';
+import { RestaurantsInput, RestaurantsOutput } from './dtos/restaurants.dto';
+import { RestaurantInput, RestaurantOutput } from './dtos/restaurant.dto';
+import { SearchRestaurantInput, SearchRestaurantOutput } from './dtos/search-restaurant.dto';
 
   @Injectable()
 export class RestaurantService {
   constructor(
     @InjectRepository(Restaurant)
     private readonly restaurants: Repository<Restaurant>,
-    @InjectRepository(Category)
+    @InjectRepository(CategoryRepository)
     private readonly categories: CategoryRepository,
-  ) {
-    // Ajoutez des logs pour vérifier l'injection
-    console.log(categories);
-  }
+  ) {}
+    
 
   async createRestaurant(
     owner: User,
@@ -36,10 +39,10 @@ export class RestaurantService {
 
       return { ok: true };
     } catch (error) {
+      console.log(error)
       return { ok: false, error: 'Vous ne pouvez pas créer un restaurant' };
     }
   }
-
   async editRestaurant(
   owner: User,
   editRestaurantInput: EditRestaurantInput,
@@ -73,27 +76,11 @@ export class RestaurantService {
     console.error('Erreur lors de l\'édition du restaurant:', error);
     return { ok: false, error: 'Une erreur est survenue lors de l\'édition du restaurant' };
   }
-}
-
-
-  // Méthode pour récupérer tous les restaurants
-  async getAllRestaurants(): Promise<Restaurant[]> {
-    return this.restaurants.find();
   }
-
-  // Méthode pour récupérer un restaurant par son ID
-  async getRestaurantById(id: number): Promise<Restaurant> {
-    const restaurant = await this.restaurants.findOne({ where: { id } });
-    if (!restaurant) {
-      throw new NotFoundException(`Restaurant with ID ${id} not found`);
-    }
-    return restaurant;
-  }
-
   // Méthode pour supprimer un restaurant
-  async deleteRestaurant(owner: User, id: number): Promise<DeleteRestaurantOutput> {
+  async deleteRestaurant(owner: User, {restaurantId}: DeleteRestaurantInput,): Promise<DeleteRestaurantOutput> {
     try {
-      const restaurant = await this.restaurants.findOne({ where: { id } });
+      const restaurant = await this.restaurants.findOne({ where: { id: restaurantId } });
       if (!restaurant) {
         return { ok: false, error: 'Restaurant non trouvé' };
       }
@@ -112,24 +99,128 @@ export class RestaurantService {
       return { ok: false, error: 'Une erreur est survenue lors de la suppression du restaurant' };
     }
   }
+  // Méthode pour récupérer toutes les catégories
+  async getAllCategories(): Promise<AllCategoriesOutput> {
+    try{
+      const categories = await this.categories.find();
+      return {
+        ok:true,
+        categories,
+      }
+    }catch{
+      return {
+        ok:false,
+        error: "Peux pas charger la liste"
+      }
+    }
+  }
+  countRestaurants(category: Category){
+    console.log(this.restaurants)
+    return this.restaurants.count({where: {category : {slug: category.slug}} })
+  }
+  // Méthode pour récupérer tous les restaurants
+  async getAllRestaurants({page}: RestaurantsInput): Promise<RestaurantsOutput> {
+      try{
+        const [restaurants, totalResults] = await this.restaurants.findAndCount({
+          skip:(page - 1)*25,
+          take:25,
+          });
+        return{
+          ok: true,
+          results: restaurants,
+          totalPages: Math.ceil(totalResults/25),
+          totalResults
+        }
+      }catch{
+        return{
+          ok: false,
+          error: "Restaurant non chargé"
+        }
+      }
+  }
+  // Méthode pour récupérer les restaurants par slug
+  async getRestaurantsBySlug({ slug, page }: CategoryInput): Promise<CategoryOutput> {
+    try {
+      // Récupère la catégorie correspondant au slug fourni
+      const category = await this.categories.findOne({
+        where: { slug },
+      });
 
-  // Méthode pour récupérer les restaurants par catégorie avec pagination
-  async getRestaurantsByCategory(categorySlug: string, page: number = 1, limit: number = 10): Promise<Restaurant[]> {
-    const category = await this.categories.findOne({ where: { slug: categorySlug } });
-    if (!category) {
-      throw new NotFoundException(`Category with slug ${categorySlug} not found`);
+      // Vérifie si la catégorie existe
+      if (!category) {
+        return {
+          ok: false,
+          error: "Catégorie non trouvée" // Correction du message d'erreur
+        };
+      }
+
+      // Récupère les restaurants associés à la catégorie avec pagination
+      const restaurants = await this.restaurants.find({
+        where: { category: {slug: category.slug} },
+        take: 25, // Nombre d'éléments par page
+        skip: (page - 1) * 25 // Calcul du décalage pour la pagination
+      });
+      // Associe les restaurants récupérés à la catégorie
+      category.restaurants = restaurants;
+      const totalResults = await this.countRestaurants(category);
+      // Retourne les données avec un statut de succès
+      return {
+        ok: true,
+        category:[category],
+        totalPages: Math.ceil(totalResults/25),
+      };
+
+    } catch (error) { // Capture l'erreur spécifique
+      console.error("Erreur lors du chargement de la catégorie:", error); // Journalise l'erreur pour le débogage
+      return {
+        ok: false,
+        error: "Impossible de charger la catégorie" // Correction du message d'erreur
+      };
+    }
+  }
+  async getRestaurantById({restaurantId}: RestaurantInput): Promise <RestaurantOutput> {
+    try{
+      const restaurant = await this.restaurants.findOne({
+        where:{ id: restaurantId}
+      })
+      if(!restaurant){
+        return{
+          ok: false,
+          error: "Restaurant non trouvé"
+        }
+      };
+      return{
+        ok: true,
+        restaurant: [restaurant],
+      };
+
+    }catch{
+      return{
+        ok: false,
+        error: "Restaurant non trouvé"
+      }
+    }
+  }
+  async searchRestaurantByName({query, page}: SearchRestaurantInput): Promise<SearchRestaurantOutput> {
+    try{
+      const [restaurants, totalResults]= await this.restaurants.findAndCount({
+        where: {name: ILike(`%${query}%`)},
+        skip:(page - 1)*25,
+        take:25,
+      });
+      return {
+        ok: true,
+        restaurants,
+        totalPages: Math.ceil(totalResults/25),
+        totalResults,
+      };
+
+    }catch{
+      return{
+        ok: false,
+        error: "Restaurant non trouvé"
+      }
     }
 
-    return this.restaurants.find({
-      where: { category: { id: category.id } },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
-
-  }
-
-  // Méthode pour récupérer toutes les catégories
-  async getAllCategories(): Promise<Category[]> {
-    return this.categories.find();
   }
 }

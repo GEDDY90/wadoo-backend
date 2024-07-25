@@ -1,4 +1,4 @@
-import { Resolver, Mutation, Args, Query, Int } from '@nestjs/graphql';
+import { Resolver, Mutation, Args, Query, Int, ResolveField, Parent } from '@nestjs/graphql';
 import { Restaurant } from './entities/restaurant.entity';
 import { CreateRestaurantInput, CreateRestaurantOutput } from './dtos/create-restaurant.dto';
 import { RestaurantService } from './restaurants.service';
@@ -6,8 +6,14 @@ import { AuthUser } from '../auth/auth-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../auth/role.decorator';
 import { EditRestaurantInput, EditRestaurantOutput } from './dtos/edit-restaurant.dto';
-import { DeleteRestaurantOutput } from './dtos/delete-restaurant.dto';
+import { DeleteRestaurantInput, DeleteRestaurantOutput } from './dtos/delete-restaurant.dto';
 import { Category } from './entities/category.entity';
+import { AllCategoriesOutput } from './dtos/allcategories.dto';
+import { CategoryInput, CategoryOutput } from './dtos/category.dto';
+import { RestaurantsInput, RestaurantsOutput } from './dtos/restaurants.dto';
+import { RestaurantsModule } from './restaurants.module';
+import { RestaurantInput, RestaurantOutput } from './dtos/restaurant.dto';
+import { SearchRestaurantInput, SearchRestaurantOutput } from './dtos/search-restaurant.dto';
 
 @Resolver(() => Restaurant)
 export class RestaurantResolver {
@@ -35,34 +41,53 @@ export class RestaurantResolver {
   @Role(['Owner'])
   async deleteRestaurant(
     @AuthUser() owner: User,
-    @Args('id', { type: () => Int }) id: number,
+    @Args('input') deleteRestaurantInput: DeleteRestaurantInput,
   ): Promise<DeleteRestaurantOutput> {
-    return this.restaurantService.deleteRestaurant(owner, id);
+    return this.restaurantService.deleteRestaurant(owner, deleteRestaurantInput);
   }
 
-  @Query(() => [Restaurant])
-  async getAllRestaurants(): Promise<Restaurant[]> {
-    return this.restaurantService.getAllRestaurants();
+ 
+
+  @Query(returns => RestaurantsOutput)
+  async getRestaurants(
+    @Args() restaurantsInput: RestaurantsInput,
+  ): Promise<RestaurantsOutput> {
+    return this.restaurantService.getAllRestaurants(restaurantsInput)   
   }
 
-  @Query(() => Restaurant)
-  async getRestaurantById(
-    @Args('id', { type: () => Int }) id: number,
-  ): Promise<Restaurant> {
-    return this.restaurantService.getRestaurantById(id);
+  @Query(returns => RestaurantOutput)
+  async getRestaurant(
+    @Args() restaurantInput: RestaurantInput,
+  ): Promise<RestaurantOutput> {
+    return this.restaurantService.getRestaurantById(restaurantInput) 
   }
 
-  @Query(() => [Restaurant])
-  async getRestaurantsByCategory(
-    @Args('categorySlug') categorySlug: string,
-    @Args('page', { type: () => Int, nullable: true }) page: number = 1,
-    @Args('limit', { type: () => Int, nullable: true }) limit: number = 10,
-  ): Promise<Restaurant[]> {
-    return this.restaurantService.getRestaurantsByCategory(categorySlug, page, limit);
+  @Query(returns => SearchRestaurantOutput)
+  async searchRestaurant(
+    @Args() searchRestaurantInput: SearchRestaurantInput,
+  ): Promise<SearchRestaurantOutput> {
+    return this.restaurantService.searchRestaurantByName(searchRestaurantInput) 
+  }
+}
+
+
+@Resolver(of=> Category)
+export class CategoryResolver {
+  constructor(private readonly restaurantService : RestaurantService){
+
+  }
+  @ResolveField(type => Int)
+  restaurantCount(@Parent()category:Category): Promise <number> {
+    return this.restaurantService.countRestaurants(category);
   }
 
-  @Query(() => [Category])
-  async getAllCategories(): Promise<Category[]> {
+  @Query(() => AllCategoriesOutput)
+  async getAllCategories(): Promise<AllCategoriesOutput> {
     return this.restaurantService.getAllCategories();
+  }
+
+  @Query(returns => CategoryOutput)
+  async category(@Args() categoryInput: CategoryInput): Promise<CategoryOutput> {
+    return this.restaurantService.getRestaurantsBySlug(categoryInput);
   }
 }
