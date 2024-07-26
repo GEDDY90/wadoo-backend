@@ -5,6 +5,16 @@ import { Column, Entity, ManyToOne, RelationId } from "typeorm";
 import { Restaurant } from "./restaurant.entity";
 
 
+@InputType('DishChoiceInputType',{isAbstract:true})
+@ObjectType()
+export class DishChoice {
+    @Field(type=> String)
+    name: string
+
+    @Field(type=>Int, {nullable:true})
+    extra?: number;
+}
+
 @InputType('DishOptionInputType',{isAbstract:true})
 @ObjectType()
 export class DishOption {
@@ -32,7 +42,7 @@ export class Dish extends CoreEntity {
     name: string;
 
     @Field(type=>String)
-    @Column()
+    @Column({nullable:true})
     @IsString()
     description: string;
 

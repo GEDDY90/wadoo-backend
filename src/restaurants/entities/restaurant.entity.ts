@@ -51,7 +51,7 @@ export class Restaurant extends CoreEntity {
     @OneToMany(
         type=> Order, 
         order => order.restaurant,)
-    order : Order[];
+    orders : Order[];
 
     @RelationId((restaurant: Restaurant)=> restaurant.owner)
     ownerId : number;
