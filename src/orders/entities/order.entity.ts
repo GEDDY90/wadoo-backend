@@ -21,7 +21,6 @@ registerEnumType(OrderStatus, {name: "OrderStatus"})
 @Entity()
 export class Order extends CoreEntity {
 
-    @Field(type=>User)
     @Field(type=> User, 
         {nullable: true})
     @ManyToOne(

@@ -1,0 +1,10 @@
+import { CoreOutput } from "src/common/dtos/output.dto";
+import { Field, ObjectType } from "@nestjs/graphql";
+import { Payment } from "../entities/payments.entity";
+
+
+@ObjectType()
+export class GetPaymentOutput extends CoreOutput {
+    @Field(type=> [Payment], {nullable: true})
+    payments?: Payment[];    
+}

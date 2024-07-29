@@ -146,7 +146,7 @@ export class RestaurantService {
     }catch{
       return {
         ok:false,
-        error: "Peux pas charger la liste"
+        error: "Peux pas charger la liste de categorie"
       }
     }
   }
@@ -170,6 +170,9 @@ export class RestaurantService {
         = await this.restaurants.findAndCount({
           skip:(page - 1)*25,
           take:25,
+          order: {
+            isPromoted: "DESC"
+          }
           });
         return{
           ok: true,
@@ -205,6 +208,9 @@ export class RestaurantService {
       = await this.restaurants.find({
         where: { 
           category: {slug: category.slug} 
+        },
+        order: {
+          isPromoted: "DESC"
         },
         take: 25, // Nombre d'éléments par page
         skip: (page - 1) * 25 // Calcul du décalage pour la pagination

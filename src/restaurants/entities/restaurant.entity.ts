@@ -28,8 +28,7 @@ export class Restaurant extends CoreEntity {
     @IsString()
     coverImg: string;
 
-    @Field(type=>String, 
-        {defaultValue: "Bénin"})
+    @Field(type=>String)
     @Column({default: "Bénin"})
     @IsString()
     address: string;
@@ -65,4 +64,12 @@ export class Restaurant extends CoreEntity {
         type=> Dish, 
         dish => dish.restaurant)
     menu: Dish[];
+
+    @Field(type=>Boolean)
+    @Column({default: false})
+    isPromoted: boolean;
+
+    @Field(type=>Date, {nullable:true})
+    @Column({nullable:true})
+    promotedUntil: Date;
 }

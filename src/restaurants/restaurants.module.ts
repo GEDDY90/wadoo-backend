@@ -9,6 +9,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from '../auth/auth.guard';
 import { Dish } from './entities/dish.entity';
 import { UsersModule } from 'src/users/users.module';
+import { PaymentsModule } from 'src/payments/payments.module';
 
 @Module({
   imports: [
