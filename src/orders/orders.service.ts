@@ -12,7 +12,6 @@ import { GetOrdersInput, GetOrdersOutput } from "./dtos/orders.dto";
 import { GetOrderInput, GetOrderOutput } from "./dtos/order.dto";
 import { NEW_COOKED_ORDER, NEW_ORDER_UPDATE, NEW_PENDING_ORDER, PUB_SUB } from "src/common/common.constants";
 import { TakeOrderInput, TakeOrderOutput } from "./dtos/take-order.dto";
-import { OrderUpdatesInput } from "./dtos/order-update.dto";
 import { PubSub } from "graphql-subscriptions";
 
   @Injectable()

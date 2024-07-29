@@ -2,9 +2,9 @@ import { Args, Mutation, Resolver, Query } from "@nestjs/graphql";
 import { Payment } from "./entities/payments.entity";
 import { PaymentService } from "./payments.service";
 import { CreatePaymentInput, CreatePaymentOutput } from "./dtos/create-payment.dto";
-import { Role } from "src/auth/role.decorator";
-import { AuthUser } from "src/auth/auth-user.decorator";
-import { User } from "src/users/entities/user.entity";
+import { Role } from "../auth/role.decorator";
+import { AuthUser } from "../auth/auth-user.decorator";
+import { User } from "../users/entities/user.entity";
 import { GetPaymentOutput } from "./dtos/get-paiements.dto";
 
 
