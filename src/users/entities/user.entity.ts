@@ -5,7 +5,7 @@ import { InternalServerErrorException } from "@nestjs/common";
 import { IsBoolean, IsEmail, IsEnum, IsString, } from "class-validator";
 import { CoreEntity } from "../../common/entities/core.entity";
 import { Restaurant } from "../../restaurants/entities/restaurant.entity";
-import { Order } from "src/orders/entities/order.entity";
+import { Order } from "../../orders/entities/order.entity";
 
 export enum UserRole {
     Client= 'Client',
@@ -63,16 +63,20 @@ export class User extends CoreEntity{
     async hashPassword(): Promise<void> {
         try {
             if (this.password) {
-                this.password = await bcrypt.hash(this.password, 10);
+                this.password = await bcrypt.
+                hash(this.password, 10);
             }        }   catch(e) {
             console.log(e);
             throw new InternalServerErrorException();
         }
     }
 
-    async checkPassword(aPassword: string): Promise<boolean> {
+    async checkPassword(
+        aPassword: string,
+    ): Promise<boolean> {
         try{
-            const ok = await bcrypt.compare(aPassword, this.password);
+            const ok = await bcrypt.
+            compare(aPassword, this.password);
             return ok;
         }catch (e){
             console.log(e);

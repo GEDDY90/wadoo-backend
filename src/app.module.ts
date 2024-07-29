@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,7 +8,6 @@ import { UsersModule } from './users/users.module';
 import { CommonModule } from './common/common.module';
 import { User } from './users/entities/user.entity';
 import { JwtModule } from './jwt/jwt.module';
-import { JwtMiddleware } from './jwt/jwt.middleware';
 import { AuthModule } from './auth/auth.module';
 import { Verification } from './users/entities/verification.entity';
 import { MailModule } from './mail/mail.module';
@@ -19,6 +18,7 @@ import { Dish } from './restaurants/entities/dish.entity';
 import { OrdersModule } from './orders/orders.module';
 import { Order } from './orders/entities/order.entity';
 import { OrderItems } from './orders/entities/order-item.entity';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -50,13 +50,28 @@ import { OrderItems } from './orders/entities/order-item.entity';
       database: process.env.DB_NAME,
       synchronize: true,
       logging: process.env.NODE_ENV !== "prod",
-      entities: [User, Verification, Restaurant, Category, Dish, Order, OrderItems],
+      entities: [User, 
+        Verification, 
+        Restaurant, 
+        Category, 
+        Dish, 
+        Order, 
+        OrderItems],
     }),
         
     GraphQLModule.forRoot<ApolloDriverConfig>({
     driver: ApolloDriver,
+    installSubscriptionHandlers: true,
     autoSchemaFile: true,
-    context: ({req}) => ({user: req['user']}),
+    context: ({req, connection}) => {
+      const TOKEN_KEY = 'x-jwt';
+      if(req) {
+        return{
+          token: req ? req.headers[TOKEN_KEY]: 
+          connection.context[TOKEN_KEY],
+        }
+      };
+    },
   }),
     JwtModule.forRoot({
       privateKey: process.env.PRIVATE_KEY,
@@ -71,17 +86,11 @@ import { OrderItems } from './orders/entities/order-item.entity';
       domain: process.env.MAILGUN_DOMAIN_NAME,
       fromEmail:process.env. MAILGUN_FROM_EMAIL,
     }),
-    OrdersModule,   
+    OrdersModule,
+    PaymentsModule,   
 ],
   controllers: [],
   providers: [],
 })
-export class AppModule implements NestModule{
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(JwtMiddleware).forRoutes({
-      path: "/graphql",
-      method: RequestMethod.POST,
-    });
-  }
+export class AppModule {};
 
-}

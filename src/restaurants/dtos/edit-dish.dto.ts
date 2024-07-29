@@ -5,7 +5,8 @@ import { CreateDishInput } from "./create-dish.dto";
 
 
 @InputType()
-export class EditDishInput extends PartialType(CreateDishInput){
+export class EditDishInput extends PartialType(
+    CreateDishInput){
     @Field(type=>Int)
     dishId: number
 }

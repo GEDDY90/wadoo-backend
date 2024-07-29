@@ -1,6 +1,6 @@
 import { ArgsType, Field, Int, ObjectType } from "@nestjs/graphql";
 import { Restaurant } from "../entities/restaurant.entity";
-import { PaginationInput, PaginationOutput } from "src/common/dtos/pagination.dto";
+import { PaginationInput, PaginationOutput } from "../../common/dtos/pagination.dto";
 
 
 @ArgsType()

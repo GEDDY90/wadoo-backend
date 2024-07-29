@@ -4,7 +4,8 @@ import { CoreOutput } from "../../common/dtos/output.dto";
 
 
 @InputType()
-export class EditRestaurantInput extends PartialType(CreateRestaurantInput){
+export class EditRestaurantInput extends PartialType(
+    CreateRestaurantInput){
     @Field(type=>Int)
     restaurantId: number
 }

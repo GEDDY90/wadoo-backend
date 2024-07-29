@@ -2,14 +2,19 @@ import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { GqlExecutionContext } from "@nestjs/graphql";
 import { AllowedRoles } from "./role.decorator";
-import { User } from "src/users/entities/user.entity";
+import { UsersService } from "../users/users.service";
+import { JwtService } from "../jwt/jwt.service";
 
 
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-    constructor(private readonly reflector : Reflector) {}
-    canActivate(context: ExecutionContext) {
+    constructor(
+        private readonly reflector : Reflector,
+        private readonly usersService: UsersService,
+        private readonly jwtService: JwtService,
+    ) {}
+    async canActivate(context: ExecutionContext) {
         const roles= this.reflector.get<AllowedRoles>(
             'roles',
              context.getHandler()
@@ -17,14 +22,30 @@ export class AuthGuard implements CanActivate {
         if(!roles){
             return true;
         };
-        const gqlContext = GqlExecutionContext.create(context).getContext();
-        const user:User = gqlContext['user'];
-        if(!user){
+        const gqlContext = GqlExecutionContext.
+        create(context).getContext();
+        const token = gqlContext.token;
+        if (token){
+            const decoded = this.jwtService.
+            verify(token.toString());
+        if (typeof decoded === 'object' && decoded.
+            hasOwnProperty('id')) {
+            const { user } = await this.usersService.
+            findById(decoded["id"]);
+            if(!user){
+                return false;
+            }
+            gqlContext['user']= user;
+            if(roles.includes('Any')){
+                return true;
+            }
+            return roles.includes(user.role)
+            } else {
+                return false;
+            }
+        } else {
             return false;
-        }
-        if(roles.includes('Any')){
-            return true;
-        }
-        return roles.includes(user.role)
+        }     
+        
     }
 }

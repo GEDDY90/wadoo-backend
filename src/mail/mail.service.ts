@@ -7,7 +7,8 @@ import { EmailVar, MailModuleOptions } from './mail.interfaces';
 @Injectable()
 export class MailService {
     constructor(
-        @Inject(CONFIG_OPTIONS) private readonly options: MailModuleOptions
+        @Inject(CONFIG_OPTIONS) 
+        private readonly options: MailModuleOptions
     ) {}
 
     // Méthode pour envoyer un email avec Mailgun
@@ -59,13 +60,19 @@ export class MailService {
     }
 
     // Méthode pour envoyer un email de vérification
-    async sendVerificationEmail(email: string, code: string): Promise<boolean> {
+    async sendVerificationEmail(
+        email: string, 
+        code: string,
+    ): Promise<boolean> {
         try {
             // Appel de la méthode sendMail pour envoyer l'email de vérification
-            const result = await this.sendMail("Vérifiez Votre Email", "verify-email", [
+            const result = await this.sendMail(
+                "Vérifiez Votre Email", "verify-email", 
+                [
                 { key: 'code', value: code },
                 { key: 'username', value: email },
-            ]);
+            ]
+        );
             return result; // Retourne le résultat de l'envoi de l'email
         } catch (error) {
             console.error("Erreur lors de l'envoi de l'email de vérification :", error); // Log de l'erreur en cas d'échec

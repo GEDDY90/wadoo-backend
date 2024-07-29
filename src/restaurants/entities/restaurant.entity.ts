@@ -5,7 +5,7 @@ import { Column, Entity, ManyToOne, OneToMany, RelationId } from "typeorm";
 import { Category } from "./category.entity";
 import { User } from "../../users/entities/user.entity";
 import { Dish } from "./dish.entity";
-import { Order } from "src/orders/entities/order.entity";
+import { Order } from "../../orders/entities/order.entity";
 
 @InputType('RestaurantInputType',{isAbstract:true})
 @ObjectType()
@@ -28,15 +28,18 @@ export class Restaurant extends CoreEntity {
     @IsString()
     coverImg: string;
 
-    @Field(type=>String, {defaultValue: "Bénin"})
+    @Field(type=>String, 
+        {defaultValue: "Bénin"})
     @Column({default: "Bénin"})
     @IsString()
     address: string;
 
-    @Field(type=> Category, {nullable: true})
+    @Field(type=> Category, 
+        {nullable: true})
     @ManyToOne(
         type=> Category,
-        category => category.restaurants, {nullable: true, onDelete: 'SET NULL'})
+        category => category.restaurants, 
+        {nullable: true, onDelete: 'SET NULL'})
     category: Category;
 
     @Field(type=> User, {nullable: true})
@@ -53,7 +56,8 @@ export class Restaurant extends CoreEntity {
         order => order.restaurant,)
     orders : Order[];
 
-    @RelationId((restaurant: Restaurant)=> restaurant.owner)
+    @RelationId((restaurant: 
+        Restaurant)=> restaurant.owner)
     ownerId : number;
 
     @Field(type=>[Dish])

@@ -38,6 +38,7 @@
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "graphql": "^16.8.2",
+    "graphql-subscriptions": "^2.0.0",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "mo": "^1.7.3",

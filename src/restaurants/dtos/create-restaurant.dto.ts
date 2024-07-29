@@ -4,12 +4,14 @@ import { CoreOutput } from "../../common/dtos/output.dto";
 
  
 @InputType()
-export class CreateRestaurantInput extends PickType(Restaurant, [
+export class CreateRestaurantInput extends PickType(
+    Restaurant, [
     "name",
     "coverImg",
     "address",
     "description"
-]){
+],
+){
     @Field(type=>String)
     categoryName: string;
     

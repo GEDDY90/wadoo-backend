@@ -6,17 +6,23 @@ import { CategoryResolver, DishResolver, RestaurantResolver } from './restaurant
 import { CategoryRepository } from './repository/category.repository';
 import { Category } from './entities/category.entity';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthGuard } from '../auth/auth.guard';
 import { Dish } from './entities/dish.entity';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Restaurant, Category, Dish]),
+    TypeOrmModule.forFeature([
+      Restaurant, 
+      Category, 
+      Dish,
+      CategoryRepository,
+    ]),
+    UsersModule,
   ],
   providers: [
     RestaurantService,
     RestaurantResolver,
-    CategoryRepository,
     CategoryResolver,
     DishResolver,
     {
@@ -24,6 +30,8 @@ import { Dish } from './entities/dish.entity';
       useClass: AuthGuard,
     },
   ],
-  exports: [RestaurantService], // Exporter le service si nécessaire
+  exports: [
+    RestaurantService
+  ],
 })
 export class RestaurantsModule {}

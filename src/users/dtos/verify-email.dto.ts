@@ -6,5 +6,8 @@ import { Verification } from "../entities/verification.entity";
 export class VerifyEmailOutput extends CoreOutput {}
 
 @InputType()
-export class VerifyEmailInput extends PickType(Verification, ["code"]) {}
+export class VerifyEmailInput extends PickType(
+    Verification, 
+    ["code"],
+) {}
 
