@@ -150,7 +150,7 @@ export class RestaurantService {
       }
     }
   }
-  countRestaurants(
+  countRestaurantsByCategory(
     category: Category,
   ){
     console.log(this.restaurants)
@@ -218,7 +218,7 @@ export class RestaurantService {
       // Associe les restaurants récupérés à la catégorie
       category.restaurants = restaurants;
       const totalResults = await this.
-      countRestaurants(category);
+      countRestaurantsByCategory(category);
       // Retourne les données avec un statut de succès
       return {
         ok: true,

@@ -67,8 +67,9 @@ import { ScheduleModule } from '@nestjs/schedule';
     GraphQLModule.forRoot<ApolloDriverConfig>({
     driver: ApolloDriver,
     installSubscriptionHandlers: true,
-    autoSchemaFile: true,
-    context: ({req, connection}) => {
+    autoSchemaFile: 'schema.gql', // Ou 'schema.gql', selon votre préférence
+    introspection: true, // Activer l'introspection
+    playground: true,    context: ({req, connection}) => {
       const TOKEN_KEY = 'x-jwt';
       if(req) {
         return{

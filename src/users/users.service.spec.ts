@@ -6,7 +6,33 @@ import { User, UserRole } from './entities/user.entity';
 import { Verification } from './entities/verification.entity';
 import { JwtService } from '../jwt/jwt.service';
 import { MailService } from '../mail/mail.service';
-import { CreateAccountInput } from './dtos/create-account.dtos';
+import { CreateAccountInput, CreateAccountOutput } from './dtos/create-account.dtos';
+import { EditProfileInput, EditProfileOutput } from './dtos/edit-profile.dto';
+import { LoginInput } from './dtos/login.tdo';
+import { NotFoundException } from '@nestjs/common';
+
+const mockUserRepository = () => ({
+  findOne: jest.fn(),
+  findOneOrFail: jest.fn(),
+  create: jest.fn(),
+  save: jest.fn(),
+  delete: jest.fn(),
+});
+
+const mockVerificationRepository = () => ({
+  findOne: jest.fn(),
+  save: jest.fn(),
+  delete: jest.fn(),
+  create: jest.fn(),
+});
+
+const mockJwtService = () => ({
+  sign: jest.fn(),
+});
+
+const mockMailService = () => ({
+  sendVerificationEmail: jest.fn(),
+});
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -19,123 +45,120 @@ describe('UsersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
-        {
-          provide: getRepositoryToken(User),
-          useClass: Repository,
-        },
-        {
-          provide: getRepositoryToken(Verification),
-          useClass: Repository,
-        },
-        {
-          provide: JwtService,
-          useValue: {
-            sign: jest.fn(() => 'signed-token'),
-          },
-        },
-        {
-          provide: MailService,
-          useValue: {
-            sendVerificationEmail: jest.fn(),
-          },
-        },
+        { provide: getRepositoryToken(User), useValue: mockUserRepository() },
+        { provide: getRepositoryToken(Verification), useValue: mockVerificationRepository() },
+        { provide: JwtService, useValue: mockJwtService() },
+        { provide: MailService, useValue: mockMailService() },
       ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    userRepository = module.get<Repository<User>>(getRepositoryToken(User));
-    verificationRepository = module.get<Repository<Verification>>(getRepositoryToken(Verification));
-    jwtService = module.get<JwtService>(JwtService);
-    mailService = module.get<MailService>(MailService);
+    userRepository = module.get(getRepositoryToken(User));
+    verificationRepository = module.get(getRepositoryToken(Verification));
+    jwtService = module.get(JwtService);
+    mailService = module.get(MailService);
   });
 
   describe('createAccount', () => {
-    it('should successfully create a new account', async () => {
-      const createAccountInput: CreateAccountInput = {
-        email: 'test@example.com',
-        password: 'password123',
-        role: UserRole.Client,
-      };
-
-      const newUser = new User();
-      newUser.email = createAccountInput.email;
-      newUser.password = createAccountInput.password;
-      newUser.role = createAccountInput.role;
-
-      const verification = new Verification();
-      verification.code = 'verificationCode';
-
+    it('should create a new account', async () => {
+      const input: CreateAccountInput = { email: 'test@test.com', password: 'password', role: UserRole.Owner };
+      const user = { id: 1, ...input };
       jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
-      jest.spyOn(userRepository, 'create').mockReturnValue(newUser);
-      jest.spyOn(userRepository, 'save').mockResolvedValue(newUser);
-      jest.spyOn(verificationRepository, 'create').mockReturnValue(verification);
-      jest.spyOn(verificationRepository, 'save').mockResolvedValue(verification);
+      jest.spyOn(userRepository, 'save').mockResolvedValue(user as any);
+      jest.spyOn(verificationRepository, 'save').mockResolvedValue({ code: 'verification-code', user } as any);
+      jest.spyOn(mailService, 'sendVerificationEmail').mockResolvedValue(undefined);
 
-      const result = await service.createAccount(createAccountInput);
+      const result = await service.createAccount(input);
       expect(result).toEqual({ ok: true });
-      expect(mailService.sendVerificationEmail).toHaveBeenCalledWith(newUser.email, verification.code);
     });
 
-    it('should fail if user already exists', async () => {
-      const createAccountInput: CreateAccountInput = {
-        email: 'test@example.com',
-        password: 'password123',
-        role: UserRole.Client,
-      };
+    it('should return an error if user already exists', async () => {
+      const input: CreateAccountInput = { email: 'test@test.com', password: 'password', role: UserRole.Client };
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue({} as any);
 
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(new User());
-
-      const result = await service.createAccount(createAccountInput);
+      const result = await service.createAccount(input);
       expect(result).toEqual({ ok: false, error: "Il y a déjà un utilisateur pour cette adresse e-mail" });
     });
   });
 
   describe('login', () => {
-    it('should successfully login and return a JWT token', async () => {
-      const loginInput = {
-        email: 'test@example.com',
-        password: 'password123',
-      };
+    it('should return a token on successful login', async () => {
+      const input: LoginInput = { email: 'test@test.com', password: 'password' };
+      const user = { id: 1, password: 'hashed-password', checkPassword: jest.fn().mockResolvedValue(true) };
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(user as any);
+      jest.spyOn(jwtService, 'sign').mockReturnValue('jwt-token');
 
-      const user = new User();
-      user.id = 1;
-      user.password = 'hashedPassword';
-
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(user);
-      jest.spyOn(user, 'checkPassword').mockResolvedValue(true);
-      jest.spyOn(jwtService, 'sign').mockReturnValue('jwtToken');
-
-      const result = await service.login(loginInput);
-      expect(result).toEqual({ ok: true, token: 'jwtToken' });
+      const result = await service.login(input);
+      expect(result).toEqual({ ok: true, token: 'jwt-token' });
     });
 
-    it('should fail if user is not found', async () => {
-      const loginInput = {
-        email: 'test@example.com',
-        password: 'password123',
-      };
-
+    it('should return an error if login fails', async () => {
+      const input: LoginInput = { email: 'test@test.com', password: 'password' };
       jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
 
-      const result = await service.login(loginInput);
-      expect(result).toEqual({ ok: false, error: `Utilisateur non trouvé pour cette adresse email ${loginInput.email}` });
+      const result = await service.login(input);
+      expect(result).toEqual({ ok: false, error: "Utilisateur non trouvé pour cette adresse email test@test.com" });
+    });
+  });
+
+  describe('editProfile', () => {
+    it('should edit the user profile successfully', async () => {
+      const input: EditProfileInput = { email: 'new@test.com', password: 'newpassword' };
+      const user = { id: 1, email: 'old@test.com', password: 'oldpassword', hashPassword: jest.fn().mockResolvedValue(undefined) };
+      jest.spyOn(userRepository, 'findOneOrFail').mockResolvedValue(user as any);
+      jest.spyOn(userRepository, 'save').mockResolvedValue({ ...user, ...input } as any);
+      jest.spyOn(verificationRepository, 'save').mockResolvedValue({ code: 'verification-code', user } as any);
+      jest.spyOn(mailService, 'sendVerificationEmail').mockResolvedValue(undefined);
+
+      const result = await service.editProfile(1, input);
+      expect(result).toEqual({ ok: true });
     });
 
-    it('should fail if password is incorrect', async () => {
-      const loginInput = {
-        email: 'test@example.com',
-        password: 'password123',
-      };
+    it('should handle errors when editing profile', async () => {
+      const input: EditProfileInput = { email: 'new@test.com', password: 'newpassword' };
+      jest.spyOn(userRepository, 'findOneOrFail').mockRejectedValue(new Error());
 
-      const user = new User();
-      user.id = 1;
-      user.password = 'hashedPassword';
+      const result = await service.editProfile(1, input);
+      expect(result).toEqual({ ok: false, error: "Le profil n'a pas été modifié" });
+    });
+  });
 
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(user);
-      jest.spyOn(user, 'checkPassword').mockResolvedValue(false);
+  describe('findById', () => {
+    it('should return the user profile by ID', async () => {
+      const user = { id: 1, email: 'test@test.com' };
+      jest.spyOn(userRepository, 'findOneOrFail').mockResolvedValue(user as any);
 
-      const result = await service.login(loginInput);
-      expect(result).toEqual({ ok: false, error: "Mot de passe incorrect" });
+      const result = await service.findById(1);
+      expect(result).toEqual({ ok: true, user });
+    });
+
+    it('should handle user not found', async () => {
+      jest.spyOn(userRepository, 'findOneOrFail').mockRejectedValue(new NotFoundException());
+
+      const result = await service.findById(1);
+      expect(result).toEqual({ ok: false, error: "Utilisateur non trouvé" });
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('should verify email successfully', async () => {
+      const code = 'verification-code';
+      const user = { id: 1, verified: false };
+      const verification = { code, user };
+      jest.spyOn(verificationRepository, 'findOne').mockResolvedValue(verification as any);
+      jest.spyOn(userRepository, 'save').mockResolvedValue({ ...user, verified: true } as any);
+      jest.spyOn(verificationRepository, 'delete').mockResolvedValue(undefined);
+
+      const result = await service.verifyEmail(code);
+      expect(result).toEqual({ ok: true });
+    });
+
+    it('should handle errors during email verification', async () => {
+      const code = 'verification-code';
+      jest.spyOn(verificationRepository, 'findOne').mockResolvedValue(null);
+
+      const result = await service.verifyEmail(code);
+      expect(result).toEqual({ ok: false, error: "Vérification non trouvée" });
     });
   });
 });

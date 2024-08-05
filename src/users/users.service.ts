@@ -5,7 +5,7 @@ import { Repository } from "typeorm";
 import { CreateAccountInput, CreateAccountOutput } from "./dtos/create-account.dtos";
 import { LoginInput, LoginOutput } from "./dtos/login.tdo";
 import { JwtService } from "../jwt/jwt.service";
-import { EditProfileIntput, EditProfileOutput } from "./dtos/edit-profile.dto";
+import { EditProfileInput, EditProfileOutput } from "./dtos/edit-profile.dto";
 import { Verification } from "./entities/verification.entity";
 import { VerifyEmailOutput } from "./dtos/verify-email.dto";
 import { MailService } from "../mail/mail.service";
@@ -71,7 +71,7 @@ export class UsersService {
     }
 
     // Méthode pour modifier le profil utilisateur
-    async editProfile(id: number, { email, password }: EditProfileIntput): Promise<EditProfileOutput> {
+    async editProfile(id: number, { email, password }: EditProfileInput): Promise<EditProfileOutput> {
         try {
             // Recherche l'utilisateur à modifier
             const user = await this.users.findOneOrFail({where:{id}});

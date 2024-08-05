@@ -1,72 +1,57 @@
-import { Resolver, Query, Mutation, InputType, Args} from "@nestjs/graphql";
+import { Resolver, Query, Mutation, Args } from "@nestjs/graphql";
 import { User } from "./entities/user.entity";
 import { UsersService } from "./users.service";
 import { CreateAccountOutput, CreateAccountInput } from "./dtos/create-account.dtos";
-import { LoginInput, LoginOutput } from "./dtos/login.tdo";
 import { UseGuards } from "@nestjs/common";
 import { AuthGuard } from "../auth/auth.guard";
 import { AuthUser } from "../auth/auth-user.decorator";
-import { UserProfileInput, UserProfileOutput } from "./dtos/user-profile.dto";
-import { EditProfileIntput, EditProfileOutput } from "./dtos/edit-profile.dto";
 import { VerifyEmailInput, VerifyEmailOutput } from "./dtos/verify-email.dto";
 import { Role } from "../auth/role.decorator";
+import { LoginInput, LoginOutput } from "./dtos/login.tdo";
+import { EditProfileInput, EditProfileOutput } from "./dtos/edit-profile.dto";
 
-
-@Resolver(of => User)
+@Resolver(() => User)
 export class UsersResolver {
     constructor(
-        private readonly usersService : UsersService,
+        private readonly usersService: UsersService,
     ) {}
 
-    @Mutation(returns => CreateAccountOutput)
+    @Mutation(() => CreateAccountOutput)
     async createAccount(
         @Args('input') createAccountInput: CreateAccountInput,
-    ): Promise<CreateAccountOutput>{
-        return this.usersService.
-        createAccount(createAccountInput);
+    ): Promise<CreateAccountOutput> {
+        return this.usersService.createAccount(createAccountInput);
     }
 
-    @Mutation(returns => LoginOutput)
+    @Mutation(() => LoginOutput)
     async login(
-        @Args("input") LoginInput: LoginInput,
-    ):Promise<LoginOutput> {
-        return this.usersService.login(LoginInput);
+        @Args('input') loginInput: LoginInput, // Correction de la variable
+    ): Promise<LoginOutput> {
+        return this.usersService.login(loginInput);
     }
 
     @Role(['Any'])
-    @Query(returns => User)
+    @Query(() => User)
     @UseGuards(AuthGuard)
     me(
-        @AuthUser() authUser: User, 
-    ){
+        @AuthUser() authUser: User,
+    ): User {
         return authUser;
     }
 
     @Role(['Any'])
-    @Query(returns=> UserProfileOutput)
-    async userProfile(
-        @Args() userProfileInput: UserProfileInput,
-    ): Promise <UserProfileOutput>{
-        return this.usersService.
-        findById(userProfileInput.userId); 
-    }
-    
-    @Role(['Any'])
-    @Mutation(returns => EditProfileOutput)
+    @Mutation(() => EditProfileOutput)
     async editProfile(
-        @AuthUser() authUser: User, 
-    @Args('input')editProfileInput:EditProfileIntput,
-    ): Promise <EditProfileOutput> {
-        return this.usersService.
-        editProfile(authUser.id, editProfileInput);
+        @AuthUser() authUser: User,
+        @Args('input') editProfileInput: EditProfileInput, // Correction de la typo
+    ): Promise<EditProfileOutput> {
+        return this.usersService.editProfile(authUser.id, editProfileInput);
     }
 
-    @Mutation(returns => VerifyEmailOutput)
-    verifyEmail(
-        @Args("input") {code} : VerifyEmailInput,
-    ): Promise<VerifyEmailOutput>{
-        return this.usersService.
-        verifyEmail(code);
+    @Mutation(() => VerifyEmailOutput)
+    async verifyEmail(
+        @Args('input') { code }: VerifyEmailInput, // Ajout de 'input'
+    ): Promise<VerifyEmailOutput> {
+        return this.usersService.verifyEmail(code);
     }
-                
 }
